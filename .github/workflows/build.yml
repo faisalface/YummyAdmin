@@ -7,24 +7,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # (اختياري) ضبط المسار الفرعي /yummyadmin/
+      # (اختياري) لو بتخدم تحت /yummyadmin داخل Laravel
       - name: Patch Vite base path
         run: |
-          if grep -q "defineConfig(" vite.config.ts; then
-            sed -i 's|defineConfig({|defineConfig({ base: "/yummyadmin/",|' vite.config.ts
+          if [ -f "vite.config.ts" ]; then
+            sed -i 's|defineConfig({|defineConfig({ base: "/yummyadmin/",|' vite.config.ts || true
           fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'npm'           # هذا فقط للتخزين المؤقت، لا يعتمد على lock
 
+      # المهم: لا تستخدم npm ci
       - name: Install dependencies
         run: npm install
 
