@@ -1,30 +1,38 @@
 name: Build YummyAdmin
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   push:
     branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      # عدل vite.config.ts ليكون base: /yummyadmin/
-      - name: Patch base path
+      # (اختياري) ضبط المسار الفرعي /yummyadmin/
+      - name: Patch Vite base path
         run: |
-          sed -i 's|defineConfig({|defineConfig({ base: "/yummyadmin/",|' vite.config.ts
+          if grep -q "defineConfig(" vite.config.ts; then
+            sed -i 's|defineConfig({|defineConfig({ base: "/yummyadmin/",|' vite.config.ts
+          fi
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm install
 
-      - name: Upload dist
+      - name: Build project
+        run: npm run build
+
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: yummyadmin-dist
           path: dist
