@@ -1,50 +1,33 @@
-name: Build YummyAdmin (diagnostic)
+name: Build YummyAdmin
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Print tree
-        run: |
-          pwd
-          node -v || true
-          npm -v || true
-          ls -la
-          test -f package.json && cat package.json || echo "no package.json!"
-
-      - name: Setup Node 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install
-        run: |
-          npm install 2>&1 | tee install.log
+      - name: Install dependencies (force legacy)
+        run: npm install --legacy-peer-deps
 
-      - name: Build
+      - name: Build project
         run: |
-          # لو لسه ما عدّلت vite.config.ts، نحاول نضيف base (لا يوقف لو فشل)
           if [ -f vite.config.ts ]; then
             sed -i 's|defineConfig({|defineConfig({ base: "/yummyadmin/",|' vite.config.ts || true
           fi
-          npm run build 2>&1 | tee build.log
+          npm run build
 
-      - name: Upload logs (even on fail)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: logs
-          path: |
-            install.log
-            build.log
-
-      - name: Upload dist
-        if: success()
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: yummyadmin-dist
